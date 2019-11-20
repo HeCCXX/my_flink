@@ -5,6 +5,15 @@ import java.util.Properties
 import org.apache.flink.api.common.serialization.SimpleStringSchema
 import org.apache.flink.streaming.connectors.kafka.{FlinkKafkaConsumer011, FlinkKafkaProducer011}
 
+/**
+ * @Author HCX
+ * @Description //TODO kafka工具类，获取生产者和消费者实例
+ * @Date 16:42 2019-11-20
+ *
+ * @return
+ * @exception
+ **/
+
 object MyKafkaUtil {
 
    val properties = new Properties()

@@ -7,6 +7,14 @@ import org.apache.flink.streaming.api.scala.{ConnectedStreams, DataStream, Split
 import org.apache.flink.streaming.connectors.kafka.{FlinkKafkaConsumer011, FlinkKafkaProducer011}
 import org.apache.flink.api.scala._
 import org.apache.flink.streaming.connectors.redis.RedisSink
+/**
+ * @Author HCX
+ * @Description //TODO 例程主函数，试验  source、reduce、split、connect、union、sink（kafka、redis）
+ * @Date 16:41 2019-11-20
+ *
+ * @return
+ * @exception
+ **/
 object StartupApp {
 
   def main(args: Array[String]): Unit = {

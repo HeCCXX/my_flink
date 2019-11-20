@@ -4,6 +4,15 @@ import org.apache.flink.streaming.connectors.redis.RedisSink
 import org.apache.flink.streaming.connectors.redis.common.config.FlinkJedisPoolConfig
 import org.apache.flink.streaming.connectors.redis.common.mapper.{RedisCommand, RedisCommandDescription, RedisMapper}
 
+/**
+ * @Author HCX
+ * @Description //TODO redis工具类，实现redis实例的获取
+ * @Date 16:42 2019-11-20
+ *
+ * @return
+ * @exception
+ **/
+
 object MyRedisUtil {
 
   private val config: FlinkJedisPoolConfig = new FlinkJedisPoolConfig.Builder().setHost("hadoop1").setPort(6379).build()
