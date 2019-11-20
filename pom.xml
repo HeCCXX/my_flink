@@ -25,7 +25,20 @@
             <artifactId>flink-connector-kafka-0.11_2.11</artifactId>
             <version>1.7.0</version>
         </dependency>
- </dependencies>
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>fastjson</artifactId>
+            <version>1.2.47</version>
+        </dependency>
+
+        <!-- redis   sink-->
+        <dependency>
+            <groupId>org.apache.bahir</groupId>
+            <artifactId>flink-connector-redis_2.11</artifactId>
+            <version>1.0</version>
+        </dependency>
+
+    </dependencies>
     <build>
         <plugins>
             <!-- 该插件用于将Scala代码编译成class文件 -->
