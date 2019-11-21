@@ -2,10 +2,11 @@ package com.practice.app
 
 import com.alibaba.fastjson.JSON
 import com.practice.bean.StartupLog
-import com.practice.util.{MyKafkaUtil, MyRedisUtil}
+import com.practice.util.{MyEsUtil, MyKafkaUtil, MyRedisUtil}
 import org.apache.flink.streaming.api.scala.{ConnectedStreams, DataStream, SplitStream, StreamExecutionEnvironment}
 import org.apache.flink.streaming.connectors.kafka.{FlinkKafkaConsumer011, FlinkKafkaProducer011}
 import org.apache.flink.api.scala._
+import org.apache.flink.streaming.connectors.elasticsearch6.ElasticsearchSink
 import org.apache.flink.streaming.connectors.redis.RedisSink
 /**
  * @Author HCX
@@ -59,17 +60,22 @@ object StartupApp {
     val unionDstream: DataStream[StartupLog] = appstoreDstream.union(otherDstream)
 //    unionDstream.print()
 
-    //添加sink
+    //添加sink  kafka  sink
     val kafkaProducer: FlinkKafkaProducer011[String] = MyKafkaUtil.getProducer("channel_sum")
 
     val sinkDstream: DataStream[String] = kvDstream.map(chCount => chCount._1 + ":" + chCount._2)
 //    sinkDstream.print()
 //    sinkDstream.addSink(kafkaProducer)
 
+    // redis  sink
     val redisSink: RedisSink[(String, String)] = MyRedisUtil.getRedisSink()
     val redisSinkDS: DataStream[(String, String)] = kvDstream.map(chcount => (chcount._1, chcount._2.toString))
-    redisSinkDS.print()
-    redisSinkDS.addSink(redisSink)
+//    redisSinkDS.print()
+//    redisSinkDS.addSink(redisSink)
+
+    val esSink: ElasticsearchSink[StartupLog] = MyEsUtil.getEsSink("test_esink")
+    startuplogDstream.print()
+    startuplogDstream.addSink(esSink)
 
     environment.execute()
   }
