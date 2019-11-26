@@ -3,9 +3,13 @@ package com.practice.app
 import com.alibaba.fastjson.JSON
 import com.practice.bean.StartupLog
 import com.practice.util.{MyEsUtil, MyJdbcSink, MyKafkaUtil, MyRedisUtil}
-import org.apache.flink.streaming.api.scala.{ConnectedStreams, DataStream, SplitStream, StreamExecutionEnvironment}
+import org.apache.flink.api.java.tuple.Tuple
+import org.apache.flink.streaming.api.scala.{ConnectedStreams, DataStream, KeyedStream, SplitStream, StreamExecutionEnvironment, WindowedStream}
 import org.apache.flink.streaming.connectors.kafka.{FlinkKafkaConsumer011, FlinkKafkaProducer011}
 import org.apache.flink.api.scala._
+import org.apache.flink.streaming.api.TimeCharacteristic
+import org.apache.flink.streaming.api.windowing.time.Time
+import org.apache.flink.streaming.api.windowing.windows.{GlobalWindow, TimeWindow}
 import org.apache.flink.streaming.connectors.elasticsearch6.ElasticsearchSink
 import org.apache.flink.streaming.connectors.redis.RedisSink
 /**
@@ -79,7 +83,40 @@ object StartupApp {
 
     //  自定义mysql sink  将数据插入到mysql表中
     val jdbcSink = new MyJdbcSink("insert into hcx_startup values(?,?,?,?,?)")
-    startuplogDstream.map(startuplog => Array(startuplog.mid,startuplog.uid,startuplog.ch,startuplog.area,startuplog.ts)).addSink(jdbcSink)
+//    startuplogDstream.map(startuplog => Array(startuplog.mid,startuplog.uid,startuplog.ch,startuplog.area,startuplog.ts)).addSink(jdbcSink)
+
+
+    /**
+     * TimeWindow   滚动窗口、滑动窗口、会话窗口
+     *    滚动窗口：时间对齐，窗口长度固定、没有重叠 ，默认根据 Processing Time进行窗口的划分
+     *    滑动窗口：时间对齐，窗口长度固定、有重叠
+     *    会话窗口：时间无对齐
+     */
+    val kStream: KeyedStream[(String, Int), Tuple] = startuplogDstream.map(startuplog => (startuplog.ch,1)).keyBy(0)
+    //每10秒统计一次各个渠道的计数
+    val windowStream: WindowedStream[(String, Int), Tuple, TimeWindow] = kStream.timeWindow(Time.seconds(10))
+    val sumStream: DataStream[(String, Int)] = windowStream.sum(1)
+//    sumStream.print()
+
+    //每5秒统计最近10秒的各个渠道的计数
+    val windowsSlideStream: WindowedStream[(String, Int), Tuple, TimeWindow] = kStream.timeWindow(Time.seconds(10),Time.seconds(5))
+    val slideSumStream: DataStream[(String, Int)] = windowsSlideStream.sum(1)
+//    slideSumStream.print()
+
+    //每当某一个key的个数达到2的时候，触发计算，计算最近该key最近10个元素的内容
+    val countStream: WindowedStream[(String, Int), Tuple, GlobalWindow] = kStream.countWindow(10,2)
+    val countSumStream: DataStream[(String, Int)] = countStream.sum(1)
+//    countSumStream.print()
+
+    /**
+     * Flink的流式处理中，绝大部分的业务都会使用eventTime，一般只在eventTime无法使用时，才会被迫使用ProcessingTime或者IngestionTime
+     * 如果要使用EventTime，那么需要引入EventTime的时间属性，引入方式如下
+     * environment.setStreamTimeCharacteristic(TimeCharacteristic.EventTime)
+     *
+     * watermark
+     */
+
+    //实例见EventTimeApp.scala
 
 
     environment.execute()
