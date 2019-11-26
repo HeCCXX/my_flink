@@ -2,7 +2,7 @@ package com.practice.app
 
 import com.alibaba.fastjson.JSON
 import com.practice.bean.StartupLog
-import com.practice.util.{MyEsUtil, MyKafkaUtil, MyRedisUtil}
+import com.practice.util.{MyEsUtil, MyJdbcSink, MyKafkaUtil, MyRedisUtil}
 import org.apache.flink.streaming.api.scala.{ConnectedStreams, DataStream, SplitStream, StreamExecutionEnvironment}
 import org.apache.flink.streaming.connectors.kafka.{FlinkKafkaConsumer011, FlinkKafkaProducer011}
 import org.apache.flink.api.scala._
@@ -74,8 +74,13 @@ object StartupApp {
 //    redisSinkDS.addSink(redisSink)
 
     val esSink: ElasticsearchSink[StartupLog] = MyEsUtil.getEsSink("test_esink")
-    startuplogDstream.print()
-    startuplogDstream.addSink(esSink)
+//    startuplogDstream.print()
+//    startuplogDstream.addSink(esSink)
+
+    //  自定义mysql sink  将数据插入到mysql表中
+    val jdbcSink = new MyJdbcSink("insert into hcx_startup values(?,?,?,?,?)")
+    startuplogDstream.map(startuplog => Array(startuplog.mid,startuplog.uid,startuplog.ch,startuplog.area,startuplog.ts)).addSink(jdbcSink)
+
 
     environment.execute()
   }
